@@ -15,7 +15,7 @@ class ImageTest(unittest.TestCase):
         print(score)
         score = judge_image_quality_mac("../sample/image_test_blur_3.jpg")
         print(score)
-        # self.assertGreater(score / 100, 50)
+        self.assertGreater(score / 100, 0)
 
     def test_video_score(self):
         # extract video frames, and calculate the score
@@ -25,18 +25,9 @@ class ImageTest(unittest.TestCase):
         # read video scores
         files = os.listdir(video_item.frame_path)
         files = sorted(files)
-        print(files)
-        score = []
-        for file in files:
-            image_path = os.path.join(video_item.frame_path, file)
-            item = judge_image_quality_mac(image_path)
-            score.append(item)
-        # print(score)
-        # for index in range(1, len(score) - 1):
-        #     if score[index] >= score[index - 1] and score[index] >= score[index + 1]:
-        #         print(f"index: {index}, score: {score[index]}")
         video_item.extract_clear_frames()
         print(video_item.clear_frames)
+        self.assertGreater(len(video_item.clear_frames), 0)
 
 
 

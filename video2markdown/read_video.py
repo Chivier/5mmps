@@ -1,16 +1,16 @@
+import base64
 import os
+
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-from PIL import Image, ImageFilter
-from io import BytesIO
-import sys
-import cv2
-import easyocr
-from ocrmac import ocrmac
 from PIL import Image, ImageEnhance, ImageOps
-import numpy as np
 from ocrmac import ocrmac
+
+
+# Open the image file and encode it as a base64 string
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
 
 
 def preprocess_image(image):
@@ -87,11 +87,19 @@ def blur_image(image, gaussianblur, save=""):
     return result_image
 
 
-def judge_image_similarity(img1, img2):
-    pass
+def read_image(image_path):
+    if not os.path.exists(image_path):
+        print("Error: Image file not found.")
+        return
 
 
-def extract_page_from_image(img):
+def compare_info_similarity(info1, confidence1, info2, confidence2):
+    """
+    Compare the similarity between two pieces of information.
+    :param info1:
+    :param info2:
+    :return:
+    """
     pass
 
 
@@ -149,7 +157,8 @@ class VideoItem:
         for frame_id in range(1, len(frame_score) - 1):
             if frame_id in self.clear_frames:
                 continue
-            if frame_score[frame_id] >= frame_score[frame_id - 1] and frame_score[frame_id] >= frame_score[frame_id + 1]:
+            if frame_score[frame_id] >= frame_score[frame_id - 1] and frame_score[frame_id] >= frame_score[
+                frame_id + 1]:
                 if frame_score[frame_id] > 0.1:
                     # add windowsize = 2 into clear_frames
                     begin_id = max(0, frame_id - 2)
@@ -158,6 +167,8 @@ class VideoItem:
                         if i not in self.clear_frames:
                             self.clear_frames.append(i)
             if frame_score[frame_id] > 0.1:
-                self.clear_frames.append(frame_id)
+                if frame_id not in self.clear_frames:
+                    self.clear_frames.append(frame_id)
 
-        print(self.clear_frames)
+    def merging_frames(self):
+        pass
