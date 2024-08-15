@@ -26,9 +26,17 @@ class ImageTest(unittest.TestCase):
         files = os.listdir(video_item.frame_path)
         files = sorted(files)
         video_item.extract_clear_frames()
+        video_item.merge_similar_frames()
         print(video_item.clear_frames)
+        print(video_item.final_clear_frames)
         self.assertGreater(len(video_item.clear_frames), 0)
 
+    def test_video_describe(self):
+        # extract video frames, and calculate the score
+        video_path = "../sample/video_test.mp4"
+        video_item = VideoItem(video_path)
+        video_item.describe_clear_frames()
+        self.assertGreater(len(video_item.clear_frames), 0)
 
 
 if __name__ == '__main__':

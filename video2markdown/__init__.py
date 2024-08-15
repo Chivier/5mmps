@@ -1,1 +1,2 @@
 import video2markdown.read_video
+import video2markdown.utils
