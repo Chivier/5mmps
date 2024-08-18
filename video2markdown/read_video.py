@@ -156,6 +156,7 @@ class VideoItem:
         self.file = None
         self.frame_path = ''.join(video_path[:video_path.rfind('.')]) + '_frames'
         self.score_file = self.frame_path + '/score.json'
+        self.description_raw_file = self.frame_path + '/description_raw.jsonl'
         self.description_file = self.frame_path + '/description.jsonl'
         self.clear_frames = []
         self.final_clear_frames = []
@@ -238,7 +239,7 @@ class VideoItem:
         with open(self.score_file, 'r') as f:
             score_info = json.load(f)
             self.final_clear_frames_score = score_info['score']
-        description_raw = self.description_file
+        description_raw = self.description_raw_file
         # clear the description_raw file
         with open(description_raw, 'w') as f:
             pass
@@ -257,7 +258,7 @@ class VideoItem:
         # sort the description_raw file by filename
         with open(description_raw, 'r') as f:
             lines = f.readlines()
-            lines.sort(key=lambda x: x[16:20])
+            lines.sort(key=lambda x: json.load(x)["filename"])
         # save the sorted description file
         with open(self.description_file, 'w') as f:
             for line in lines:
