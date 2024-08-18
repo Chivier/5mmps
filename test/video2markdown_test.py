@@ -38,6 +38,21 @@ class ImageTest(unittest.TestCase):
         video_item.describe_clear_frames()
         self.assertGreater(len(video_item.clear_frames), 0)
 
+    def test_clean_description(self):
+        # extract video frames, and calculate the score
+        video_path = "../sample/video_test.mp4"
+        video_item = VideoItem(video_path)
+        video_item.clean_description()
+        self.assertGreater(len(video_item.clear_frames), 0)
+
+    def test_read_video_end2end(self):
+        # read video end to end
+        video_path = "../sample/video_test.mp4"
+        video_item = VideoItem(video_path)
+        video_item.execute()
+        print(video_item.final_markdown)
+        self.assertGreater(len(video_item.final_markdown), 0)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -8,8 +8,6 @@ from openai import OpenAI
 def simple_openai_client():
     proxy_url = os.environ.get("OPENAI_PROXY_URL")
     api_key = os.environ.get("OPENAI_API_KEY")
-    print(f"Using Open AI API Key: {api_key}")
-    print(f"Using Open AI Proxy URL: {proxy_url}")
     if proxy_url is None or proxy_url == "":
         client = OpenAI(api_key=api_key)
     else:

@@ -4,8 +4,11 @@ import os
 import cv2
 import numpy as np
 from PIL import Image, ImageEnhance, ImageOps
+from nerif.nerif_agent.nerif_agent import SimpleChatAgent
 from ocrmac import ocrmac
 from skimage.metrics import structural_similarity as ssim
+from nerif.nerif_core import *
+from nerif.nerif_agent import *
 
 from video2markdown.utils import *
 
@@ -36,7 +39,7 @@ def preprocess_image(image):
     gray = ImageOps.grayscale(image)
     # increase contrast
     contrast = ImageEnhance.Contrast(gray)
-    adjusted = contrast.enhance(1.5)  # 对比度控制 (1.0-3.0)
+    adjusted = contrast.enhance(1.5)
     return adjusted
 
 
@@ -160,6 +163,7 @@ class VideoItem:
         self.frame_score = []
         if not os.path.exists(self.frame_path):
             os.makedirs(self.frame_path)
+        self.final_markdown = ""
 
     def read_video(self):
         extract_frames(self.path, self.frame_path, 10)
@@ -199,7 +203,6 @@ class VideoItem:
         score_info = {"score": self.final_clear_frames_score}
         with open(self.score_file, 'w') as f:
             json.dump(score_info, f)
-
 
     def extract_clear_frames(self):
         self.clear_frames = []
@@ -260,4 +263,38 @@ class VideoItem:
             for line in lines:
                 f.write(line)
 
+    def clean_description(self):
+        # description_path = frame_path + file path
+        description_path = self.description_file
+        with open(description_path) as f:
+            lines = f.readlines()
+            index = 0
+            while index < len(lines):
+                line_info = json.loads(lines[index])
+                if nerif(f"<sentence>{line_info['description']}</sentence> This sentence have some useful markdown "
+                         f"information."):
+                    index += 1
+                    continue
+                del lines[index]
 
+        if len(lines) == 0:
+            raise ValueError("No useful information found in the description file. Please scan the video again.")
+
+        system_prompt = ("You are a helpful assistant, now I have some useful information from an instruction book. "
+                         "Help me organize them together!")
+        agent = SimpleChatAgent(default_prompt=system_prompt)
+        prompt = ""
+        for line in lines:
+            item = json.loads(line)
+            prompt += f"<PARAGRAPH>\n{item['description']}\n</PARAGRAPH>\n"
+
+        # TODO: Improve the accuracy by sentence merging!
+
+        self.final_markdown = agent.chat(prompt, max_tokens=4096)
+
+    def execute(self):
+        self.read_video()
+        self.extract_clear_frames()
+        self.merge_similar_frames()
+        self.describe_clear_frames()
+        self.clean_description()
