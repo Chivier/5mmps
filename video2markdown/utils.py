@@ -1,6 +1,7 @@
 import base64
 import os
-
+import http.client
+import json
 import openai
 from openai import OpenAI
 
@@ -44,8 +45,42 @@ def encode_image(image_path):
         return base64.b64encode(image_file.read()).decode('utf-8')
 
 
+def openai_read_image_proxy(image_path):
+    API_KEY = os.environ.get("OPENAI_API_KEY")
+    PROXY_URL = os.environ.get("OPENAI_PROXY_URL")
+    base64_image = encode_image(image_path)
+    conn = http.client.HTTPSConnection(PROXY_URL)
+    messages=[
+                {"role": "system", "content": "You are a helpful assistant that responds in Markdown. Help me read this"
+                                              " image. This is an instructions book."},  # system message
+                {"role": "user", "content": [
+                    {"type": "text", "text": "Read all the text in this image. If there are some images, describe them."
+                                             " Give me the text and image description in Markdown format. Only give me "
+                                             "the final result only, do not translate or give me useless content. Just "
+                                             "Markdown result: "},
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
+                    ]}
+            ]
+    payload = json.dumps({
+        "model": "gpt-4-all",
+        "messages": messages
+    })
+    headers = {
+        'Accept': 'application/json',
+        'Authorization': f'Bearer {API_KEY}',
+        'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
+        'Content-Type': 'application/json'
+    }
+    conn.request("POST", "/v1/chat/completions", payload, headers)
+    res = conn.getresponse()
+    data = res.read()
+    print(data.decode("utf-8"))
+
 def openai_read_image(image_path):
     MODEL = "gpt-4o"
+    if os.environ.get("OPENAI_PROXY_URL") is not None:
+        return openai_read_image_proxy(image_path)
+    
     # Get the client
     client = simple_openai_client()
 
@@ -53,8 +88,7 @@ def openai_read_image(image_path):
     # Encode the image
     try:
         response = client.chat.completions.create(
-            model=MODEL,
-            messages=[
+            model=MODEL,            messages=[
                 {"role": "system", "content": "You are a helpful assistant that responds in Markdown. Help me read this"
                                               " image. This is an instructions book."},  # system message
                 {"role": "user", "content": [
